@@ -4,8 +4,23 @@
 #include <stdio.h>
 #include <string.h>
 
+void display_prompt()
+{
+    //this function will clear out the whole screen and print out 
+    //prompt for user to start putting in inputs
+    printf("%s", "myshell>");
+}
+
+void print_error()
+{
+    //this function will print out err msg as given in instruction
+    char error_message[30] = "An error has occurred\n";
+    write(STDERR_FILENO, error_message, strlen(error_message));
+}
+
 int cd(char **args)
 {
+    char cwd[100];
     if(args[1] == NULL)
     {
         puts("Please input argument for cd.");
@@ -16,6 +31,14 @@ int cd(char **args)
         {
             print_error();
         }
+        if(getcwd(cwd, sizeof(cwd)) != NULL)
+        {
+            printf("Current dir: %s\n", cwd);
+        }
+        else{
+            print_error();
+            return 1;
+        }
     }
     return 1;
     
@@ -23,7 +46,7 @@ int cd(char **args)
 
 void clr()
 {
-    for(i = 0; i < 40; i++)
+    for(int i = 0; i < 40; i++)
     {
         puts("");
     }
@@ -39,9 +62,16 @@ void environ()
     //list all environment strings
 }
 
-void echo(char *comment)
+int echo(char **args)
 {
-    printf("%s", comment);
+    int i = 1;
+    for(i = 1; args[i] != NULL; i++)
+    {
+        printf("%s ", args[i]);
+    }
+    puts("");
+
+    return 1;
 }
 
 void help()
@@ -55,12 +85,7 @@ void quit()
     exit(0);
 }
 
-void display_prompt()
-{
-    //this function will clear out the whole screen and print out 
-    //prompt for user to start putting in inputs
-    printf("%s", "myshell>");
-}
+
 
 char *read_command()
 {
@@ -94,12 +119,6 @@ char **parse_command(char *line)
     return tokens;
 }
 
-void print_error()
-{
-    //this function will print out err msg as given in instruction
-    char error_message[30] = "An error has occurred\n";
-    write(STDERR_FILENO, error_message, strlen(error_message));
-}
 
 // void createProcess()
 // {
@@ -122,7 +141,7 @@ int main()
     {
         display_prompt();
         command = read_command();
-        printf("%s", command);
+        // printf("%s", command);
         args = parse_command(command);
         
         // if(fork() != 0)
@@ -135,12 +154,32 @@ int main()
 
             
         // }
-        if(command == "exit")
+        if(strcmp(command, "cd") == 0)
         {
-            printf("%s invoked.", command);
+            printf("%s invoked.\n", command);
+            cd(args);
+        }
+        if(strcmp(command, "clr") == 0)
+        {
+            printf("%s invoked.\n", command);
+            clr();
+        }
+        if(strcmp(command, "echo") == 0)
+        {
+            printf("%s invoked.\n", command);
+            echo(args);
+        }
+        if(strcmp(command, "exit") == 0)
+        {
+            printf("%s invoked.\n", command);
             quit();
         }
-        
+        else
+        {
+            print_error();
+        }
+        free(command);
+        free(args);
 
     }
 }
