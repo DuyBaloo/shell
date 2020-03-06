@@ -4,22 +4,22 @@
 #include <stdio.h>
 #include <string.h>
 
-int i;
-// void cd(char directory[10])
-// {
-//     char s[100]; 
-
-//     if(isEmpty(directory))
-//     {
-//         // printing current working directory 
-//         printf("%s\n", getcwd(s, 100));
-//     }
-//     else
-//     {
-//         chdir(directory);
-//         printf("%s\n", getcwd(s, 100));
-//     }
-// }
+int cd(char **args)
+{
+    if(args[1] == NULL)
+    {
+        puts("Please input argument for cd.");
+    }
+    else
+    {
+        if(chdir(args[1]) != 0)
+        {
+            print_error();
+        }
+    }
+    return 1;
+    
+}
 
 void clr()
 {
@@ -62,23 +62,36 @@ void display_prompt()
     printf("%s", "myshell>");
 }
 
-void read_command(char command[], char *para[])
+char *read_command()
 {
     //this function will read one line then tokenize the whole line
     //put the first word to put in cmd to execute the command
     //the rest will be put in para to serve as parameters for that command
     char *line;
     size_t bufsize = 0;
-    char *tokens;
     
     getline(&line, &bufsize, stdin);
-    tokens = strtok(line, " \n");
+    
+    return line;
 
-    while(tokens != NULL)
+}
+
+char **parse_command(char *line)
+{
+    int buffer = 64, i = 0;
+    char **tokens = malloc(buffer * sizeof(char*));
+    char *token;
+
+    token = strtok(line, " \n");
+    while(token != NULL)
     {
-        printf("%s\n", tokens);
-        tokens = strtok(NULL, " \n");
+        tokens[i] = token;
+        i++;
+
+        token = strtok(NULL, " \n");
     }
+    tokens[i] = NULL;
+    return tokens;
 }
 
 void print_error()
@@ -100,23 +113,18 @@ void print_error()
 //         printf("");
 //     }
 // }
-// int isEmpty(char *head)
-// {
-//     if((*head) == NULL)
-//     {
-//         return 1;
-//     }
-// }
 
 int main()
 {
-    char cmd[100], command[100], *para[10];
+    char *command, **args;
     clr();
     while(1)
     {
         display_prompt();
-        read_command(command, para);
-        printf("%s %s", command, para);
+        command = read_command();
+        printf("%s", command);
+        args = parse_command(command);
+        
         // if(fork() != 0)
         //     wait(NULL);
         // else
