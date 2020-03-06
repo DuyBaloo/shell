@@ -67,36 +67,18 @@ void read_command(char command[], char *para[])
     //this function will read one line then tokenize the whole line
     //put the first word to put in cmd to execute the command
     //the rest will be put in para to serve as parameters for that command
-    char line[1024];
-    int count = 0, i = 0, j = 0;
-    char *array[100], *tokens;
-
-    for( ; ; )
-    {
-        int c = fgetc(stdin);
-        line[count++] = (char) c;
-        if(c == '\n')
-        {
-            break;
-        }
-    }
-    if(count == 1)
-    return;
+    char *line;
+    size_t bufsize = 0;
+    char *tokens;
+    
+    getline(&line, &bufsize, stdin);
     tokens = strtok(line, " \n");
+
     while(tokens != NULL)
     {
-        array[i++] = strdup(tokens);
+        printf("%s\n", tokens);
         tokens = strtok(NULL, " \n");
     }
-
-    strcpy(command, array[0]);
-
-    for(j = 0; j < i; j++)
-    {
-        para[j] = array[j];
-    }
-
-    para[i] = NULL;
 }
 
 void print_error()
