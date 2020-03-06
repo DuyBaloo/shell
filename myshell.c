@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <dirent.h>
 
 void display_prompt()
 {
@@ -46,15 +47,20 @@ int cd(char **args)
 
 void clr()
 {
-    for(int i = 0; i < 40; i++)
-    {
-        puts("");
-    }
+    printf("%s", "\033[H\033[2J");
 }
 
-void dir (char directory)
+int dir()
 {
     //this function takes in a directory and prints out what's in It
+    DIR *dir = opendir(".");
+    struct dirent *s;
+    while((s = readdir(dir)) != NULL)
+    {
+        printf("%s\n", s->d_name);
+    }
+    puts("******************************************************************************");
+    return 1;
 }
 
 void environ()
@@ -174,10 +180,15 @@ int main()
             printf("%s invoked.\n", command);
             quit();
         }
-        else
+        if(strcmp(command, "dir") == 0)
         {
-            print_error();
+            printf("%s invoked.\n", command);
+            dir();
         }
+        // else
+        // {
+        //     print_error();
+        // }
         free(command);
         free(args);
 
