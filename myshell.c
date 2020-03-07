@@ -63,9 +63,32 @@ int dir()
     return 1;
 }
 
-void environ()
+int environ()
 {
     //list all environment strings
+    printf("USER=%s\n", getenv("USER"));
+    printf("LANG=%s\n", getenv("LANG"));
+    printf("HOME=%s\n", getenv("HOME"));
+    printf("PATH=%s\n", getenv("PATH"));
+    printf("MAIL=%s\n", getenv("MAIL"));
+    printf("SHELL=%s\n", getenv("SHELL"));
+    printf("SSH_CLIENT=%s\n", getenv("SSH_CLIENT"));
+    printf("SSH_TTY=%s\n", getenv("SSH_TTY"));
+    printf("TERM=%s\n", getenv("TERM"));
+    printf("XDG_SESSION_ID=%s\n", getenv("XDG_SESSION_ID"));
+    printf("XDG_RUNTIME_DIR=%s\n", getenv("XDG_RUNTIME_DIR"));
+    printf("HOSTTYPE=%s\n", getenv("HOSTTYPE"));
+    printf("VENDOR=%s\n", getenv("VENDOR"));
+    printf("OSTYPE=%s\n", getenv("OSTYPE"));
+    printf("MATCHTYPE=%s\n", getenv("MATCHTYPE"));
+    printf("SHLVL=%s\n", getenv("SHLVL"));
+    printf("PWD=%s\n", getenv("PWD"));
+    printf("GROUP=%s\n", getenv("GROUP"));
+    printf("HOST=%s\n", getenv("HOST"));
+    printf("REMOTEHOST=%s\n", getenv("REMOTEHOST"));
+    printf("MANPATH=%s\n", getenv("MANPATH"));
+    printf("WWW_HOME=%s\n", getenv("WWW_HOME"));
+    return 1;
 }
 
 int echo(char **args)
@@ -125,6 +148,43 @@ char **parse_command(char *line)
     return tokens;
 }
 
+int *execute_args(char *cmd, char **args)
+{
+    if(strcmp(cmd, "cd") == 0)
+        {
+            printf("%s invoked.\n", cmd);
+            cd(args);
+        }
+        else if(strcmp(cmd, "clr") == 0)
+        {
+            printf("%s invoked.\n", cmd);
+            clr();
+        }
+        else if(strcmp(cmd, "echo") == 0)
+        {
+            printf("%s invoked.\n", cmd);
+            echo(args);
+        }
+        else if(strcmp(cmd, "exit") == 0)
+        {
+            printf("%s invoked.\n", cmd);
+            quit();
+        }
+        else if(strcmp(cmd, "dir") == 0)
+        {
+            printf("%s invoked.\n", cmd);
+            dir();
+        }
+        else if(strcmp(cmd, "environ") == 0)
+        {
+            printf("%s invoked.\n", cmd);
+            environ();
+        }
+        else
+        {
+            print_error();
+        }
+}
 
 // void createProcess()
 // {
@@ -157,38 +217,10 @@ int main()
         //     strcpy(cmd, "/bin/");
         //     strcat(cmd, command);
         //     execvp(cmd, para);
-
+        execute_args(command, args);
             
         // }
-        if(strcmp(command, "cd") == 0)
-        {
-            printf("%s invoked.\n", command);
-            cd(args);
-        }
-        if(strcmp(command, "clr") == 0)
-        {
-            printf("%s invoked.\n", command);
-            clr();
-        }
-        if(strcmp(command, "echo") == 0)
-        {
-            printf("%s invoked.\n", command);
-            echo(args);
-        }
-        if(strcmp(command, "exit") == 0)
-        {
-            printf("%s invoked.\n", command);
-            quit();
-        }
-        if(strcmp(command, "dir") == 0)
-        {
-            printf("%s invoked.\n", command);
-            dir();
-        }
-        // else
-        // {
-        //     print_error();
-        // }
+        
         free(command);
         free(args);
 
