@@ -7,7 +7,6 @@
 
 void display_prompt()
 {
-    //this function will clear out the whole screen and print out 
     //prompt for user to start putting in inputs
     printf("%s", "myshell>");
 }
@@ -21,6 +20,7 @@ void print_error()
 
 int cd(char **args)
 {
+    //this will change the directory and print out current dir
     char cwd[100];
     if(args[1] == NULL)
     {
@@ -47,12 +47,13 @@ int cd(char **args)
 
 void clr()
 {
+    //using argument from slide
     printf("%s", "\033[H\033[2J");
 }
 
 int dir()
 {
-    //this function takes in a directory and prints out what's in It
+    //this function takes in a directory and prints out what's in it
     DIR *dir = opendir(".");
     struct dirent *s;
     while((s = readdir(dir)) != NULL)
@@ -65,7 +66,7 @@ int dir()
 
 int environ()
 {
-    //list all environment strings
+    //list all environment strings using getenv
     printf("USER=%s\n", getenv("USER"));
     printf("LANG=%s\n", getenv("LANG"));
     printf("HOME=%s\n", getenv("HOME"));
@@ -93,6 +94,7 @@ int environ()
 
 int echo(char **args)
 {
+    //this will ignore the 1st index of args array and print out the rest
     int i = 1;
     for(i = 1; args[i] != NULL; i++)
     {
@@ -118,9 +120,7 @@ void quit()
 
 char *read_command()
 {
-    //this function will read one line then tokenize the whole line
-    //put the first word to put in cmd to execute the command
-    //the rest will be put in para to serve as parameters for that command
+    //this program takes in input from user and will return the string to pass to parse_command
     char *line;
     size_t bufsize = 0;
     
@@ -132,6 +132,7 @@ char *read_command()
 
 char **parse_command(char *line)
 {
+    //takes in line input by user and start tokenizing then return the array of arguments
     int buffer = 64, i = 0;
     char **tokens = malloc(buffer * sizeof(char*));
     char *token;
@@ -150,6 +151,7 @@ char **parse_command(char *line)
 
 int *execute_args(char *cmd, char **args)
 {
+    //check to see which command to execute by comparing the strings, otherwise print the error
     if(strcmp(cmd, "cd") == 0)
         {
             printf("%s invoked.\n", cmd);
@@ -186,40 +188,18 @@ int *execute_args(char *cmd, char **args)
         }
 }
 
-// void createProcess()
-// {
-//     pid_t pid = fork();
-//     if(pid < 0)
-//     {
-//         perror("Fork failed.");
-//     }
-//     if(pid == 0)
-//     {
-//         printf("");
-//     }
-// }
-
 int main()
 {
-    char *command, **args;
-    clr();
+    char *command, **args; //initialize the pointers to use
+    clr(); //clear the screen for the first time
     while(1)
     {
-        display_prompt();
-        command = read_command();
+        //loop runs forever until exit is executed
+        display_prompt(); //display the prompt for user
+        command = read_command(); //store input into command
         // printf("%s", command);
-        args = parse_command(command);
-        
-        // if(fork() != 0)
-        //     wait(NULL);
-        // else
-        // {
-        //     strcpy(cmd, "/bin/");
-        //     strcat(cmd, command);
-        //     execvp(cmd, para);
-        execute_args(command, args);
-            
-        // }
+        args = parse_command(command); //put into into tokens
+        execute_args(command, args); //call execute_args function
         
         free(command);
         free(args);
