@@ -1,4 +1,5 @@
 #include <sys/wait.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -149,10 +150,20 @@ char **parse_command(char *line)
     return tokens;
 }
 
-int *execute_args(char *cmd, char **args)
+void *execute_args(char *cmd, char **args)
 {
-    //check to see which command to execute by comparing the strings, otherwise print the error
-    if(strcmp(cmd, "cd") == 0)
+    int status = 0;
+    pid_t pid;
+    printf("pid before fork is: %d\n", getpid());
+    if((pid = fork()) == -1)
+    {
+        print_error();
+    }
+    else if(pid == 0)
+    {
+        printf("pid after fork is: %d\n", getpid());
+        //check to see which command to execute by comparing the strings, otherwise print the error
+        if(strcmp(cmd, "cd") == 0)
         {
             printf("%s invoked.\n", cmd);
             cd(args);
@@ -182,10 +193,25 @@ int *execute_args(char *cmd, char **args)
             printf("%s invoked.\n", cmd);
             environ();
         }
+        else if (execvp(*args, args) < 0) 
+        {     /* execute the command  */
+            print_error();
+            exit(1);
+        }
         else
         {
             print_error();
         }
+    }
+    else{
+        if((waitpid(pid, &status, 0)) != pid) 
+        {
+            print_error();
+            return 0;
+        }
+    }
+    
+    // return 1;
 }
 
 int main()
