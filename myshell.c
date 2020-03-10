@@ -114,7 +114,7 @@ void help()
 void quit()
 {
     puts("Quitting Shell...");
-    exit(0);
+    exit(1);
 }
 
 
@@ -155,7 +155,12 @@ void *execute_args(char *cmd, char **args)
     int status = 0;
     pid_t pid;
     printf("pid before fork is: %d\n", getpid());
-    if((pid = fork()) == -1)
+    if(strcmp(cmd, "exit") == 0)
+    {
+        printf("%s invoked.\n", cmd);
+        quit();
+    }
+    else if((pid = fork()) == -1)
     {
         print_error();
     }
@@ -178,11 +183,6 @@ void *execute_args(char *cmd, char **args)
             printf("%s invoked.\n", cmd);
             echo(args);
         }
-        else if(strcmp(cmd, "exit") == 0)
-        {
-            printf("%s invoked.\n", cmd);
-            quit();
-        }
         else if(strcmp(cmd, "dir") == 0)
         {
             printf("%s invoked.\n", cmd);
@@ -203,7 +203,8 @@ void *execute_args(char *cmd, char **args)
             print_error();
         }
     }
-    else{
+    else
+    {
         if((waitpid(pid, &status, 0)) != pid) 
         {
             print_error();
