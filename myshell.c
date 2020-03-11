@@ -110,25 +110,34 @@ int echo(char **args)
 int help()
 {
     //display a help page with more filter
-    clr();
-    puts("Welcome to my shell program.");
-    puts("Copyrights@ Duy Nguyen.");
-    puts("");
-    puts("Description:\n\tThis acts as a regular UNIX shell.");
-    puts("");
-    puts("Built-in commands you can try:");
-    puts("\t1. cd - Change directory to your input.");
-    puts("\t2. clr - Clear the screen.");
-    puts("\t3. environ - List all the envorinment strings.");
-    puts("\t4. echo - Display your own input strings.");
-    puts("\t5. help - Display user manual.");
-    puts("\t6. pause - Pause the shell until you input 'Enter'.");
-    puts("\t7. dir - List the current files in the directory.");
-    puts("\t8. exit - Quit the shell.");
-    
+    clr();    
+    char *str[] = {
+        "Welcome to my shell program, press Enter to navigate through help menu.",
+        "Copyrights@ Duy Nguyen.",
+        "Description:\n\tThis acts as a regular UNIX shell.",
+        "Built-in commands you can try:",
+        "\t1. cd - Change directory to your input.",
+        "\t2. clr - Clear the screen.",
+        "\t3. environ - List all the envorinment strings.",
+        "\t4. echo - Display your own input strings.",
+        "\t5. help - Display user manual."
+        "\t6. pause - Pause the shell until you input 'Enter'.",
+        "\t7. dir - List the current files in the directory.",
+        "\t8. exit - Quit the shell.",
+        "In addition, you can try regular UNIX commands like: ls, rm, cat, etc.",
+        "End of help."
+    };
 
-    puts("In addition, you can try regular UNIX commands like: ls, rm, cat, etc.");
-    
+    for(int i = 0; i < 13; i++)
+    {
+        char c = getchar();
+        if(c == '\n')
+        {
+            printf("%s\n", str[i]);
+        }
+
+    }
+       
     return 1;
 }
 
@@ -150,6 +159,84 @@ void quit()
     printf("%s", "Quitting Shell\n");
     sleep(1);
     exit(0);
+}
+
+int pause_shell()
+{
+    clr();
+    puts("Shell is paused. Press Enter to continue.");
+    char c;
+    c = getchar();
+    while(&c != NULL)
+    {
+        if(c == '\n')
+        {
+            return 1;
+        }
+        else
+        {
+            clr();
+            puts("Shell is paused. Press Enter to continue.");
+        }
+        c = getchar();
+    }
+}
+
+int isBackground(char *cmd)
+{
+    int i;
+    for(i = 0; cmd[i] != '\0'; i++)
+    {
+        if(cmd[i] == '&')
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+}
+
+void test()
+{
+    for(int i = 0; i < 20; i++)
+    {
+        sleep(1);
+        printf("%d\n", i);
+    }
+}
+
+int run_background(char *cmd, char **args)
+{
+    pid_t pid;
+    printf("pid before fork is: %d\n", getpid());
+    if((pid = fork()) == -1)
+    {
+        print_error();
+    }
+    else if(pid == 0)
+    {
+        printf("pid after fork is: %d\n", getpid());
+        //check to see which command to execute by comparing the strings, otherwise print the error
+        
+        if(execvp(*args, args) < 0)
+        {     /* execute the command  */
+            print_error();
+        }
+        
+    }
+    else
+    {
+        // if((waitpid(pid, &status, 0)) != pid) 
+        // {
+        //     print_error();
+        //     return 0;
+        // }
+        clr();
+        display_prompt();
+    }
+
 }
 
 char *read_command()
@@ -187,72 +274,88 @@ void *execute_args(char *cmd, char **args)
 {
     int status = 0;
     pid_t pid;
-    printf("pid before fork is: %d\n", getpid());
+    
     if(strcmp(cmd, "exit") == 0)
     {
         printf("%s invoked.\n", cmd);
 
         quit();
     }
-    else if((pid = fork()) == -1)
+    else if(strcmp(cmd, "pause") == 0)
     {
-        print_error();
+        printf("%s invoked.\n", cmd);
+        pause_shell();
     }
-    else if(pid == 0)
+    else if(strcmp(cmd, "cd") == 0)
     {
-        printf("pid after fork is: %d\n", getpid());
-        //check to see which command to execute by comparing the strings, otherwise print the error
-        if(strcmp(cmd, "cd") == 0)
+        printf("%s invoked.\n", cmd);
+        cd(args);
+    }
+    else if(strcmp(cmd, "help") == 0)
+    {
+        printf("%s invoked.\n", cmd);
+        help();
+    }
+    else if(strcmp(cmd, "clr") == 0)
+    {
+        printf("%s invoked.\n", cmd);
+        clr();
+    }
+    else if(strcmp(cmd, "echo") == 0)
+    {
+        printf("%s invoked.\n", cmd);
+        echo(args);
+    }
+    else if(strcmp(cmd, "dir") == 0)
+    {
+        printf("%s invoked.\n", cmd);
+        dir();
+    }
+    else if(strcmp(cmd, "environ") == 0)
+    {
+        printf("%s invoked.\n", cmd);
+        environ();
+    }
+    // else
+    // {
+    //     print_error();
+    // }
+    else
+    {
+        printf("pid before fork is: %d\n", getpid());
+        pid = fork();
+        if(pid == -1)
         {
-            printf("%s invoked.\n", cmd);
-            cd(args);
-        }
-        else if(strcmp(cmd, "help") == 0)
-        {
-            printf("%s invoked.\n", cmd);
-            help();
-        }
-        else if(strcmp(cmd, "clr") == 0)
-        {
-            printf("%s invoked.\n", cmd);
-            clr();
-        }
-        else if(strcmp(cmd, "echo") == 0)
-        {
-            printf("%s invoked.\n", cmd);
-            echo(args);
-        }
-        else if(strcmp(cmd, "dir") == 0)
-        {
-            printf("%s invoked.\n", cmd);
-            dir();
-        }
-        else if(strcmp(cmd, "environ") == 0)
-        {
-            printf("%s invoked.\n", cmd);
-            environ();
-        }
-        else if (execvp(*args, args) < 0) 
-        {     /* execute the command  */
             print_error();
-            exit(1);
+        }
+        else if(pid == 0)
+        {
+            printf("pid after fork is: %d\n", getpid());
+            //check to see which command to execute by comparing the strings, otherwise print the error
+            
+            if(execvp(*args, args) < 0)
+            {     /* execute the command  */
+                print_error();
+            }
+            
         }
         else
         {
-            print_error();
-        }
-    }
-    else
-    {
-        if((waitpid(pid, &status, 0)) != pid) 
-        {
-            print_error();
-            return 0;
+            // if((waitpid(pid, &status, 0)) != pid) 
+            // {
+            //     print_error();
+            //     return 0;
+            // }
+            wait(&status);
         }
     }
     
+
+    
+    
     // return 1;
 }
+
 
 void read_from_batch()
 {
@@ -268,8 +371,12 @@ void read_from_batch()
         exit(1);
     }
     while ((read = getline(&line, &len, fp)) != -1) {
+        // printf("%d\n", strlen("dir"));
+        // printf("%d\n", strlen(line));
         printf("%s", line);
         command = line;
+                printf("%s", line);
+
         args = parse_command(command);
         execute_args(command, args);
     }
@@ -277,11 +384,6 @@ void read_from_batch()
     free(args);
     fclose(fp);
     exit(0);
-}
-
-int run_background()
-{
-
 }
 
 int main(int argc, char *argv[])
@@ -297,12 +399,20 @@ int main(int argc, char *argv[])
             display_prompt(); //display the prompt for user
             command = read_command(); //store input into command
             // printf("%s", command);
+            int i = isBackground(command);
             args = parse_command(command); //put into tokens
-            execute_args(command, args); //call execute_args function
+            if(i)
+            {                
+                run_background(command, args);
+                test();
+            }
+            else
+            {
+                execute_args(command, args); //call execute_args function
+            }
             
             free(command);
             free(args);
-
         }
     }
     else if(strcmp(argv[1], "batchfile") == 0)
