@@ -171,12 +171,8 @@ int pause_shell()
     {
         if(c == '\n')
         {
-            return 1;
-        }
-        else
-        {
             clr();
-            puts("Shell is paused. Press Enter to continue.");
+            return 1;
         }
         c = getchar();
     }
@@ -211,6 +207,8 @@ int run_background(char *cmd, char **args)
 {
     pid_t pid;
     printf("pid before fork is: %d\n", getpid());
+    size_t size = sizeof(args)/sizeof(args[0]);
+    args[size - 1] = NULL;
     if((pid = fork()) == -1)
     {
         print_error();
