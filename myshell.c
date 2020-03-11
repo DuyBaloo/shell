@@ -260,27 +260,35 @@ void read_from_batch()
     exit(0);
 }
 
+int run_background()
+{
+
+}
+
 int main(int argc, char *argv[])
 {
     char *command, **args; //initialize the pointers to use
     FILE *fp;
     clr(); //clear the screen for the first time
-    if(strcmp(argv[1], "batchfile") == 0)
-    {
-        read_from_batch();
-    }
-    puts("Enter 'help' for user manual.");
-    while(1)
-    {
-        //loop runs forever until exit is executed
-        display_prompt(); //display the prompt for user
-        command = read_command(); //store input into command
-        // printf("%s", command);
-        args = parse_command(command); //put into into tokens
-        execute_args(command, args); //call execute_args function
-        
-        free(command);
-        free(args);
+    // if(strcmp(argv[1], "batchfile") == 0)
+    // {
+    //     read_from_batch();
+    // }
+    // else if(strcmp(argv[1], "batchfile") < 0){
+        puts("Enter 'help' for user manual.");
+        while(1)
+        {
+            //loop runs forever until exit is executed
+            display_prompt(); //display the prompt for user
+            command = read_command(); //store input into command
+            // printf("%s", command);
+            args = parse_command(command); //put into tokens
+            execute_args(command, args); //call execute_args function
+            
+            free(command);
+            free(args);
 
-    }
+        }
+    // }
+    
 }
