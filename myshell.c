@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
+#include <time.h>
 
 void display_prompt()
 {
@@ -125,14 +126,28 @@ int help()
     puts("\t7. quit - Quit the shell.");
     puts("\t8. dir - List the current files in the directory.");
 
-    puts("In addition, you can try regular UNIX commands like: ls, rm, etc.");
+    puts("In addition, you can try regular UNIX commands like: ls, rm, cat, etc.");
     
     return 1;
 }
 
+void delay(int number_of_seconds) 
+{ 
+    // Converting time into milli_seconds 
+    int milli_seconds = 1000 * number_of_seconds; 
+  
+    // Storing start time 
+    clock_t start_time = clock(); 
+  
+    // looping till required time is not achieved 
+    while (clock() < start_time + milli_seconds) 
+        ; 
+} 
+
 void quit()
 {
-    puts("Quitting Shell...");
+    printf("%s", "Quitting Shell\n");
+    sleep(1);
     exit(1);
 }
 
@@ -175,6 +190,7 @@ void *execute_args(char *cmd, char **args)
     if(strcmp(cmd, "exit") == 0)
     {
         printf("%s invoked.\n", cmd);
+
         quit();
     }
     else if((pid = fork()) == -1)
