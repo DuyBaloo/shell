@@ -106,9 +106,26 @@ int echo(char **args)
     return 1;
 }
 
-void help()
+int help()
 {
     //display a help page with more filter
+    clr();
+    puts("Welcome to my shell program.");
+    puts("Copyrights@ Duy Nguyen.");
+    puts("");
+    puts("Description:\n\tThis acts as a regular UNIX shell.");
+    puts("");
+    puts("Built-in commands you can try:");
+    puts("\t1. cd - Change directory to your input.");
+    puts("\t2. clr - Clear the screen.");
+    puts("\t3. environ - List all the envorinment strings.");
+    puts("\t4. echo - Display your own input strings.");
+    puts("\t5. help - Display user manual.");
+    puts("\t6. pause - Pause the shell until you input 'Enter'.");
+    puts("\t7. quit - Quit the shell.");
+    puts("In addition, you can try regular UNIX commands like: ls, rm, etc.");
+
+    return 1;
 }
 
 void quit()
@@ -173,6 +190,11 @@ void *execute_args(char *cmd, char **args)
             printf("%s invoked.\n", cmd);
             cd(args);
         }
+        else if(strcmp(cmd, "help") == 0)
+        {
+            printf("%s invoked.\n", cmd);
+            help();
+        }
         else if(strcmp(cmd, "clr") == 0)
         {
             printf("%s invoked.\n", cmd);
@@ -219,6 +241,7 @@ int main()
 {
     char *command, **args; //initialize the pointers to use
     clr(); //clear the screen for the first time
+    puts("Enter 'help' for user manual.");
     while(1)
     {
         //loop runs forever until exit is executed
