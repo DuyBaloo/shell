@@ -123,8 +123,9 @@ int help()
     puts("\t4. echo - Display your own input strings.");
     puts("\t5. help - Display user manual.");
     puts("\t6. pause - Pause the shell until you input 'Enter'.");
-    puts("\t7. quit - Quit the shell.");
-    puts("\t8. dir - List the current files in the directory.");
+    puts("\t7. dir - List the current files in the directory.");
+    puts("\t8. exit - Quit the shell.");
+    
 
     puts("In addition, you can try regular UNIX commands like: ls, rm, cat, etc.");
     
@@ -148,7 +149,7 @@ void quit()
 {
     printf("%s", "Quitting Shell\n");
     sleep(1);
-    exit(1);
+    exit(0);
 }
 
 char *read_command()
@@ -262,8 +263,10 @@ void read_from_batch()
 
     fp = fopen("text.txt", "r");
     if (fp == NULL)
+    {
+        puts("Error opening file.");
         exit(1);
-
+    }
     while ((read = getline(&line, &len, fp)) != -1) {
         printf("%s", line);
         command = line;
@@ -286,11 +289,7 @@ int main(int argc, char *argv[])
     char *command, **args; //initialize the pointers to use
     FILE *fp;
     clr(); //clear the screen for the first time
-    // if(strcmp(argv[1], "batchfile") == 0)
-    // {
-    //     read_from_batch();
-    // }
-    // else if(strcmp(argv[1], "batchfile") < 0){
+    if(argc == 1){
         puts("Enter 'help' for user manual.");
         while(1)
         {
@@ -305,6 +304,11 @@ int main(int argc, char *argv[])
             free(args);
 
         }
-    // }
+    }
+    else if(strcmp(argv[1], "batchfile") == 0)
+    {
+        read_from_batch();
+    }
+    
     
 }
