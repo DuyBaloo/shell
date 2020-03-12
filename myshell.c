@@ -1,5 +1,7 @@
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -128,31 +130,19 @@ int help()
         "End of help."
     };
 
-    for(int i = 0; i < 13; i++)
+    int i = 0;
+    printf("%s\n", str[i]);
+    for(i = 1; i < 13; i++)
     {
         char c = getchar();
         if(c == '\n')
         {
             printf("%s\n", str[i]);
         }
-
     }
        
     return 1;
 }
-
-void delay(int number_of_seconds) 
-{ 
-    // Converting time into milli_seconds 
-    int milli_seconds = 1000 * number_of_seconds; 
-  
-    // Storing start time 
-    clock_t start_time = clock(); 
-  
-    // looping till required time is not achieved 
-    while (clock() < start_time + milli_seconds) 
-        ; 
-} 
 
 void quit()
 {
@@ -180,18 +170,21 @@ int pause_shell()
 
 int isBackground(char *cmd)
 {
-    int i;
-    for(i = 0; cmd[i] != '\0'; i++)
+    int i = strlen(cmd) - 2;
+    if(cmd[i - 2] == '&')
     {
-        if(cmd[i] == '&')
-        {
-            return 1;
-        }
-        else
-        {
-            return 0;
-        }
+        return 1;
     }
+}
+
+char *remove_ampersand(char *cmd)
+{
+    int i = strlen(cmd) - 2;
+    if(cmd[i] == '&')
+    {
+        cmd[i] == '\0';
+    }
+    return cmd;
 }
 
 void test()
@@ -203,12 +196,11 @@ void test()
     }
 }
 
-int run_background(char *cmd, char **args)
+void *run_background(char *cmd, char **args)
 {
     pid_t pid;
     printf("pid before fork is: %d\n", getpid());
-    size_t size = sizeof(args)/sizeof(args[0]);
-    args[size - 1] = NULL;
+
     if((pid = fork()) == -1)
     {
         print_error();
@@ -222,7 +214,6 @@ int run_background(char *cmd, char **args)
         {     /* execute the command  */
             print_error();
         }
-        
     }
     else
     {
@@ -233,8 +224,41 @@ int run_background(char *cmd, char **args)
         // }
         clr();
         display_prompt();
+        puts("");
     }
 
+}
+
+int redirection(char **args)
+{
+    int pid = fork();
+    if(pid >= 0)
+    {
+        if(pid == 0)
+        {
+            int outFile = open("out.txt", O_WRONLY|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
+            close(1);
+            dup2(outFile, 1);
+            close(outFile);
+
+            if(execvp(args[0], args) < 0)
+            {
+                puts("ERROR EXECUTING COMMAND!");
+                exit(0);
+            }
+        }
+        else
+        {
+            int status = 0;
+            wait(&status);
+        }
+        
+    }
+    else
+    {
+        puts("Forking error!");
+    }
+    return 1;
 }
 
 char *read_command()
@@ -314,10 +338,10 @@ void *execute_args(char *cmd, char **args)
         printf("%s invoked.\n", cmd);
         environ();
     }
-    // else
-    // {
-    //     print_error();
-    // }
+    else if(strcmp(cmd, "\n") == 0)
+    {
+        print_error();
+    }
     else
     {
         printf("pid before fork is: %d\n", getpid());
@@ -347,22 +371,18 @@ void *execute_args(char *cmd, char **args)
             wait(&status);
         }
     }
-    
-
-    
-    
     // return 1;
 }
 
 
-void read_from_batch()
+void *read_from_batch(char *argv[])
 {
     FILE *fp;
     char *line = NULL, **args, *command;
     size_t len = 0;
     ssize_t read;
 
-    fp = fopen("text.txt", "r");
+    fp = fopen(argv[1], "r");
     if (fp == NULL)
     {
         puts("Error opening file.");
@@ -378,6 +398,7 @@ void read_from_batch()
         args = parse_command(command);
         execute_args(command, args);
     }
+
     free(line);
     free(args);
     fclose(fp);
@@ -388,6 +409,7 @@ int main(int argc, char *argv[])
 {
     char *command, **args; //initialize the pointers to use
     FILE *fp;
+    int i = 0;
     clr(); //clear the screen for the first time
     if(argc == 1){
         puts("Enter 'help' for user manual.");
@@ -397,26 +419,28 @@ int main(int argc, char *argv[])
             display_prompt(); //display the prompt for user
             command = read_command(); //store input into command
             // printf("%s", command);
-            int i = isBackground(command);
-            args = parse_command(command); //put into tokens
-            if(i)
-            {                
-                run_background(command, args);
-                test();
-            }
-            else
+            //put into tokens
+            // i = isBackground(command);
+            // if(i)
+            // {   
+            // //     command = remove_ampersand(command);
+            // //     args = parse_command(command);
+            // //     run_background(command, args);
+                
+            // }
+            // else if(!i)
             {
+                args = parse_command(command);
                 execute_args(command, args); //call execute_args function
             }
-            
-            free(command);
-            free(args);
         }
     }
-    else if(strcmp(argv[1], "batchfile") == 0)
+    else if(strcmp(argv[1], argv[1]) == 0)
     {
-        read_from_batch();
+        read_from_batch(argv);
     }
-    
+
+    free(command);
+    free(args);
     
 }
