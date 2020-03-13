@@ -146,6 +146,7 @@ int help()
 
 void quit()
 {
+    //quit the shell
     printf("%s", "Quitting Shell\n");
     sleep(1);
     exit(0);
@@ -153,6 +154,7 @@ void quit()
 
 int pause_shell()
 {
+    //pause the shell until enter is hit
     clr();
     puts("Shell is paused. Press Enter to continue.");
     char c;
@@ -170,30 +172,47 @@ int pause_shell()
 
 int isBackground(char *cmd)
 {
+    //check if user wants to execute command in background
     int i = strlen(cmd) - 2;
-    if(cmd[i - 2] == '&')
+    if(cmd[i] == '&')
     {
         return 1;
     }
+    else
+    {
+        return 0;
+    }
+    
 }
 
 char *remove_ampersand(char *cmd)
 {
+    //remove the ampersand to execute
     int i = strlen(cmd) - 2;
     if(cmd[i] == '&')
     {
-        cmd[i] == '\0';
+        cmd[i] = '\0';
     }
+    return cmd;
+}
+
+char *remove_last2(char *cmd)
+{
+    //remove last 2 chars of a line
+    int i = strlen(cmd);
+    if(cmd[i - 1] == ' ' || cmd[i - 1] == '\0' || cmd[i - 1] == '\n')
+    {
+        cmd[i - 1] = '\0';
+        cmd[i - 2] = '\0';
+    }
+    
     return cmd;
 }
 
 void test()
 {
-    for(int i = 0; i < 20; i++)
-    {
-        sleep(1);
-        printf("%d\n", i);
-    }
+    //test background process
+    sleep(1000);
 }
 
 void *run_background(char *cmd, char **args)
@@ -208,8 +227,9 @@ void *run_background(char *cmd, char **args)
     else if(pid == 0)
     {
         printf("pid after fork is: %d\n", getpid());
+
         //check to see which command to execute by comparing the strings, otherwise print the error
-        
+        test();
         if(execvp(*args, args) < 0)
         {     /* execute the command  */
             print_error();
@@ -217,14 +237,8 @@ void *run_background(char *cmd, char **args)
     }
     else
     {
-        // if((waitpid(pid, &status, 0)) != pid) 
-        // {
-        //     print_error();
-        //     return 0;
-        // }
+        sleep(1);
         clr();
-        display_prompt();
-        puts("");
     }
 
 }
@@ -377,6 +391,7 @@ void *execute_args(char *cmd, char **args)
 
 void *read_from_batch(char *argv[])
 {
+    //read all command lines from file and execute
     FILE *fp;
     char *line = NULL, **args, *command;
     size_t len = 0;
@@ -391,12 +406,10 @@ void *read_from_batch(char *argv[])
     while ((read = getline(&line, &len, fp)) != -1) {
         // printf("%d\n", strlen("dir"));
         // printf("%d\n", strlen(line));
-        printf("%s", line);
-        command = line;
-                printf("%s", line);
-
-        args = parse_command(command);
-        execute_args(command, args);
+        line = remove_last2(line);
+        printf("%s\n", line);
+        args = parse_command(line);
+        execute_args(line, args);
     }
 
     free(line);
@@ -409,7 +422,6 @@ int main(int argc, char *argv[])
 {
     char *command, **args; //initialize the pointers to use
     FILE *fp;
-    int i = 0;
     clr(); //clear the screen for the first time
     if(argc == 1){
         puts("Enter 'help' for user manual.");
@@ -420,15 +432,17 @@ int main(int argc, char *argv[])
             command = read_command(); //store input into command
             // printf("%s", command);
             //put into tokens
-            // i = isBackground(command);
-            // if(i)
-            // {   
-            // //     command = remove_ampersand(command);
-            // //     args = parse_command(command);
-            // //     run_background(command, args);
+           
+            
+            
+            if(isBackground(command))
+            {   
+                command = remove_ampersand(command);
+                args = parse_command(command);
+                run_background(command, args);
                 
-            // }
-            // else if(!i)
+            }
+            else
             {
                 args = parse_command(command);
                 execute_args(command, args); //call execute_args function
