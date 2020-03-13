@@ -212,7 +212,7 @@ char *remove_last2(char *cmd)
 void test()
 {
     //test background process
-    sleep(1000);
+    sleep(5);
 }
 
 void *run_background(char *cmd, char **args)
@@ -243,14 +243,26 @@ void *run_background(char *cmd, char **args)
 
 }
 
-int redirection(char **args)
+int isRedirection(char *line)
+{
+    int res = 0;
+    for(int i = 0; line[i] != '\0'; i++)
+    {
+        if(line[i] == '>' || line[i] == '<')
+        {
+            res = 1;
+        }
+    }
+    return res;
+}
+int redirection(char **args, char *in, char *out)
 {
     int pid = fork();
     if(pid >= 0)
     {
         if(pid == 0)
         {
-            int outFile = open("out.txt", O_WRONLY|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
+            int outFile = open(out, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
             close(1);
             dup2(outFile, 1);
             close(outFile);
@@ -266,7 +278,6 @@ int redirection(char **args)
             int status = 0;
             wait(&status);
         }
-        
     }
     else
     {
@@ -377,15 +388,9 @@ void *execute_args(char *cmd, char **args)
         }
         else
         {
-            // if((waitpid(pid, &status, 0)) != pid) 
-            // {
-            //     print_error();
-            //     return 0;
-            // }
             wait(&status);
         }
     }
-    // return 1;
 }
 
 
@@ -393,7 +398,7 @@ void *read_from_batch(char *argv[])
 {
     //read all command lines from file and execute
     FILE *fp;
-    char *line = NULL, **args, *command;
+    char *line = NULL, **args, *command, *left, *right;
     size_t len = 0;
     ssize_t read;
 
