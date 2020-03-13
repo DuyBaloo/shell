@@ -1,3 +1,4 @@
 dir
 echo this is echo
 cd ..
+dir

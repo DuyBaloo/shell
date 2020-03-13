@@ -231,16 +231,33 @@ void *run_background(char *cmd, char **args)
         //check to see which command to execute by comparing the strings, otherwise print the error
         test();
         if(execvp(*args, args) < 0)
-        {     /* execute the command  */
+        {
             print_error();
         }
     }
     else
     {
-        sleep(1);
+        sleep(0.5);
         clr();
     }
 
+}
+
+// void addInArray(char *arr, char **args, int i)
+// {
+//     arr[i] = args[i];
+// }
+char *remove_special(char *line)
+{
+    for(int i = 0; line[i] != '\0'; i++)
+    {
+        if(line[i] == '>')
+        {
+            line[i] = '\0';
+        }
+    }
+    
+    return line;
 }
 
 int isRedirection(char *line)
@@ -248,21 +265,30 @@ int isRedirection(char *line)
     int res = 0;
     for(int i = 0; line[i] != '\0'; i++)
     {
-        if(line[i] == '>' || line[i] == '<')
+        if(line[i] == '>')
         {
             res = 1;
         }
     }
     return res;
 }
-int redirection(char **args, char *in, char *out)
+
+void *redirection(char **args, char *argv[])
 {
+    char *file[10];
+    for(int i = 0; argv[i] != '\0'; i++)
+    {
+        if(argv[i] == '>')
+        {
+            int a = i + 1;
+            file[a] = argv[i];        }
+    }
     int pid = fork();
     if(pid >= 0)
     {
         if(pid == 0)
         {
-            int outFile = open(out, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
+            int outFile = open(file, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
             close(1);
             dup2(outFile, 1);
             close(outFile);
@@ -283,7 +309,7 @@ int redirection(char **args, char *in, char *out)
     {
         puts("Forking error!");
     }
-    return 1;
+   
 }
 
 char *read_command()
@@ -398,7 +424,7 @@ void *read_from_batch(char *argv[])
 {
     //read all command lines from file and execute
     FILE *fp;
-    char *line = NULL, **args, *command, *left, *right;
+    char *line = NULL, **args;
     size_t len = 0;
     ssize_t read;
 
@@ -435,17 +461,19 @@ int main(int argc, char *argv[])
             //loop runs forever until exit is executed
             display_prompt(); //display the prompt for user
             command = read_command(); //store input into command
-            // printf("%s", command);
-            //put into tokens
-           
-            
-            
+
             if(isBackground(command))
             {   
                 command = remove_ampersand(command);
                 args = parse_command(command);
                 run_background(command, args);
                 
+            }
+            else if(isRedirection(command))
+            {
+                command = remove_special(command);
+                args = parse_command(command);
+                redirection(args, argv);
             }
             else
             {
