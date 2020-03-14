@@ -196,6 +196,18 @@ char *remove_ampersand(char *cmd)
     return cmd;
 }
 
+char *remove_last(char *cmd)
+{
+    //remove last 2 chars of a line
+    int i = strlen(cmd);
+    if(cmd[i - 1] == ' ' || cmd[i - 1] == '\0' || cmd[i - 1] == '\n')
+    {
+        cmd[i - 1] = '\0';
+    }
+    
+    return cmd;
+}
+
 char *remove_last2(char *cmd)
 {
     //remove last 2 chars of a line
@@ -249,15 +261,17 @@ void *run_background(char *cmd, char **args)
 // }
 char *remove_special(char *line)
 {
+    char *new;
     for(int i = 0; line[i] != '\0'; i++)
     {
         if(line[i] == '>')
         {
-            line[i] = '\0';
+            i++;
         }
+        new[i] = line[i];
     }
     
-    return line;
+    return new;
 }
 
 int isRedirection(char *line)
@@ -275,20 +289,21 @@ int isRedirection(char *line)
 
 void *redirection(char **args, char *argv[])
 {
-    char *file[10];
+    char **file;
     for(int i = 0; argv[i] != '\0'; i++)
     {
-        if(argv[i] == '>')
+        if(argv[i] == ">")
         {
-            int a = i + 1;
-            file[a] = argv[i];        }
+            *file = argv[i];
+        }
     }
+
     int pid = fork();
     if(pid >= 0)
     {
         if(pid == 0)
         {
-            int outFile = open(file, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
+            int outFile = open(*file, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
             close(1);
             dup2(outFile, 1);
             close(outFile);
@@ -321,7 +336,6 @@ char *read_command()
     getline(&line, &bufsize, stdin);
     
     return line;
-
 }
 
 char **parse_command(char *line)
@@ -469,12 +483,12 @@ int main(int argc, char *argv[])
                 run_background(command, args);
                 
             }
-            else if(isRedirection(command))
-            {
-                command = remove_special(command);
-                args = parse_command(command);
-                redirection(args, argv);
-            }
+            // else if(isRedirection(command))
+            // {
+            //     command = remove_special(command);
+            //     args = parse_command(command);
+            //     redirection(args, argv);
+            // }
             else
             {
                 args = parse_command(command);
