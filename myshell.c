@@ -99,7 +99,7 @@ int environ()
 int echo(char **args)
 {
     //this will ignore the 1st index of args array and print out the rest
-    int i = 1;
+    int i;
     for(i = 1; args[i] != NULL; i++)
     {
         printf("%s ", args[i]);
@@ -185,6 +185,19 @@ int isBackground(char *cmd)
     
 }
 
+int isPipe(char *line)
+{
+    int res = 0;
+    for(int i = 0; line[i] != '\0'; i++)
+    {
+        if(line[i] == '|')
+        {
+            res = 1;
+        }
+    }
+    return res;
+}
+
 char *remove_ampersand(char *cmd)
 {
     //remove the ampersand to execute
@@ -198,7 +211,7 @@ char *remove_ampersand(char *cmd)
 
 char *remove_last(char *cmd)
 {
-    //remove last 2 chars of a line
+    //remove last char of a line
     int i = strlen(cmd);
     if(cmd[i - 1] == ' ' || cmd[i - 1] == '\0' || cmd[i - 1] == '\n')
     {
@@ -246,31 +259,47 @@ void *run_background(char *cmd, char **args)
         {
             print_error();
         }
+
     }
     else
     {
-        sleep(0.5);
+        sleep(0.8);
         clr();
     }
 
 }
 
-// void addInArray(char *arr, char **args, int i)
-// {
-//     arr[i] = args[i];
-// }
-char *remove_special(char *line)
+char **remove_special(char **args)
 {
-    char *new;
-    for(int i = 0; line[i] != '\0'; i++)
+    char **new;
+    int j = 0;
+    for(int i = 0; args[i] != '\0'; i++)
     {
-        if(line[i] == '>')
+        if(*args[i] == '>')
         {
-            i++;
+            i += 1;
         }
-        new[i] = line[i];
+        new[j] = args[i];
+        printf("%s\n", new[j]);
+        j++;
     }
     
+    return new;
+}
+
+char **remove_last_index(char **args)
+{
+    char **new;
+    int j = 0;
+    for(int i = 0; args[i] != '\0'; i++)
+    {
+        if(args[i] == '\0')
+        {
+            new[j - 1] = '\0';
+        }
+        new[j] = args[i];
+        j++;
+    }
     return new;
 }
 
@@ -287,18 +316,44 @@ int isRedirection(char *line)
     return res;
 }
 
-void *redirection(char **args, char *argv[])
+char **get_file_name(char **args)
 {
+    int a = 0;
     char **file;
-    for(int i = 0; argv[i] != '\0'; i++)
+    for(int i = 0; args[i] != '\0'; i++)
     {
-        if(argv[i] == ">")
+        if(*args[i] == '>')
         {
-            *file = argv[i];
+            a = i + 1;
         }
     }
 
+    file[0] = args[a];
+
+    return file;
+}
+// char **get_params(char **args)
+// {
+//     char **new;
+//     for(int i = 0; args[i] != '\0'; i++)
+//     {
+//         if(*args[i] == '>')
+//         {
+//             new[i] = '\0';
+//             break;
+//         }
+//         else
+//         {
+//             new[i] = args[i];
+//         }
+        
+//     }
+//     return new;
+// }
+void *redirection(char **args, char **file)
+{
     int pid = fork();
+    // char **params = get_params(args);
     if(pid >= 0)
     {
         if(pid == 0)
@@ -436,7 +491,8 @@ void *execute_args(char *cmd, char **args)
 
 void *read_from_batch(char *argv[])
 {
-    //read all command lines from file and execute
+    //read all command lines from file and execute, since text file has 2 extra character
+    //I have created a function to delete last 2
     FILE *fp;
     char *line = NULL, **args;
     size_t len = 0;
@@ -449,10 +505,8 @@ void *read_from_batch(char *argv[])
         exit(1);
     }
     while ((read = getline(&line, &len, fp)) != -1) {
-        // printf("%d\n", strlen("dir"));
-        // printf("%d\n", strlen(line));
+
         line = remove_last2(line);
-        printf("%s\n", line);
         args = parse_command(line);
         execute_args(line, args);
     }
@@ -465,8 +519,7 @@ void *read_from_batch(char *argv[])
 
 int main(int argc, char *argv[])
 {
-    char *command, **args; //initialize the pointers to use
-    FILE *fp;
+    char *command, **args, **params; //initialize the pointers to use
     clr(); //clear the screen for the first time
     if(argc == 1){
         puts("Enter 'help' for user manual.");
@@ -483,12 +536,16 @@ int main(int argc, char *argv[])
                 run_background(command, args);
                 
             }
-            // else if(isRedirection(command))
-            // {
-            //     command = remove_special(command);
-            //     args = parse_command(command);
-            //     redirection(args, argv);
-            // }
+            else if(isRedirection(command))
+            {
+                args = parse_command(command);
+                params = args;
+                char **file = get_file_name(params);
+                args = remove_special(params);//remove ">"
+
+                args = remove_last_index(params);//remove the file name
+                redirection(args, file);
+            }
             else
             {
                 args = parse_command(command);
