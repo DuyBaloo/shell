@@ -322,34 +322,15 @@ char **get_file_name(char **args)
     char **file;
     for(int i = 0; args[i] != '\0'; i++)
     {
-        if(*args[i] == '>')
+        if(*args[i] == '\0')
         {
-            a = i + 1;
+            a = i - 1;
         }
     }
-
     file[0] = args[a];
-
     return file;
 }
-// char **get_params(char **args)
-// {
-//     char **new;
-//     for(int i = 0; args[i] != '\0'; i++)
-//     {
-//         if(*args[i] == '>')
-//         {
-//             new[i] = '\0';
-//             break;
-//         }
-//         else
-//         {
-//             new[i] = args[i];
-//         }
-        
-//     }
-//     return new;
-// }
+
 void *redirection(char **args, char **file)
 {
     int pid = fork();
@@ -539,12 +520,12 @@ int main(int argc, char *argv[])
             else if(isRedirection(command))
             {
                 args = parse_command(command);
+              
                 params = args;
-                char **file = get_file_name(params);
-                args = remove_special(params);//remove ">"
-
-                args = remove_last_index(params);//remove the file name
-                redirection(args, file);
+                // char **file = get_file_name(params);
+                args = remove_special(args);//remove ">"
+                args = remove_last_index(args);//remove the file name
+                redirection(args, get_file_name(params));
             }
             else
             {
