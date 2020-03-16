@@ -198,6 +198,7 @@ int isPipe(char *line)
     return res;
 }
 
+
 char *remove_ampersand(char *cmd)
 {
     //remove the ampersand to execute
@@ -234,12 +235,6 @@ char *remove_last2(char *cmd)
     return cmd;
 }
 
-void test()
-{
-    //test background process
-    sleep(5);
-}
-
 void *run_background(char *cmd, char **args)
 {
     pid_t pid;
@@ -254,7 +249,6 @@ void *run_background(char *cmd, char **args)
         printf("pid after fork is: %d\n", getpid());
 
         //check to see which command to execute by comparing the strings, otherwise print the error
-        test();
         if(execvp(*args, args) < 0)
         {
             print_error();
@@ -263,38 +257,22 @@ void *run_background(char *cmd, char **args)
     }
     else
     {
-        sleep(0.8);
-        clr();
+  
     }
 
 }
 
 char **remove_special(char **args)
 {
-    char **new;
-    int j = 0;
     for(int i = 0; args[i] != '\0'; i++)
     {
-        if(*args[i] == '>' || *args[i] == '<')
+        if(*args[i] == '>' || *args[i] == '<' || *args[i] == '|')
         {
-            i += 1;
+            args[i] = '\0';
         }
-        new[j] = args[i];
-        j++;
     }
     
-    return new;
-}
-
-char **remove_last_index(char **args)
-{
-    char **new = args;
-    int i = 0;
-    for(i = 0; args[i] != '\0'; i++)
-    {
-    }
-    new[i] = '\0';
-    return new;
+    return args;
 }
 
 int isRedirection(char *line)
@@ -310,32 +288,28 @@ int isRedirection(char *line)
     return res;
 }
 
-char **get_file_name(char **args)
+char *get_file_name(char **args)
 {
-    int a = 0;
-    char **res;
-    char **file = args;
-    for(int i = 0; file[i] != '\0'; i++)
+    int i = 0;
+    char *file = calloc(20, 1);
+    // char **file = args;
+    for(i = 0; args[i] != '\0'; i++)
     {
-        if(*file[i] == '>' || *file[i] == '<')
-        {
-            res[0] = file[i + 1];
-        }
-        
     }
-    printf("%s file\n", res[0]);
-    return res;
+
+    strcpy(file, args[i - 1]);
+    return file;
 }
 
-void *redirection(char **args, char **file)
+void *redirection(char **args, char *file)
 {
     int pid = fork();
-    // char **params = get_params(args);
+
     if(pid >= 0)
     {
         if(pid == 0)
         {
-            int outFile = open(*file, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
+            int outFile = open(file, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
             close(1);
             dup2(outFile, 1);
             close(outFile);
@@ -496,7 +470,7 @@ void *read_from_batch(char *argv[])
 
 int main(int argc, char *argv[])
 {
-    char *command, **args, **params; //initialize the pointers to use
+    char *command, **args; //initialize the pointers to use
     clr(); //clear the screen for the first time
     if(argc == 1){
         puts("Enter 'help' for user manual.");
@@ -516,18 +490,13 @@ int main(int argc, char *argv[])
             else if(isRedirection(command))
             {
                 args = parse_command(command);
-                printf("%s\n", args[0]);
-                // params = args;
 
-                char **file = get_file_name(args);
-                                printf("%s\n", args[0]);
-                                                printf("%s file\n", *file);
+                char *file = calloc(20, 1);
+                strcpy(file, get_file_name(args));
 
                 args = remove_special(args);//remove ">"
-                                printf("%s\n", args[0]);
-
-                args = remove_last_index(args);//remove the file name
                 redirection(args, file);
+
             }
             else
             {
