@@ -259,7 +259,7 @@ void *run_background(char *cmd, char **args)
         {
             print_error();
         }
-
+        
     }
     else
     {
@@ -275,12 +275,11 @@ char **remove_special(char **args)
     int j = 0;
     for(int i = 0; args[i] != '\0'; i++)
     {
-        if(*args[i] == '>')
+        if(*args[i] == '>' || *args[i] == '<')
         {
             i += 1;
         }
         new[j] = args[i];
-        printf("%s\n", new[j]);
         j++;
     }
     
@@ -289,17 +288,12 @@ char **remove_special(char **args)
 
 char **remove_last_index(char **args)
 {
-    char **new;
-    int j = 0;
-    for(int i = 0; args[i] != '\0'; i++)
+    char **new = args;
+    int i = 0;
+    for(i = 0; args[i] != '\0'; i++)
     {
-        if(args[i] == '\0')
-        {
-            new[j - 1] = '\0';
-        }
-        new[j] = args[i];
-        j++;
     }
+    new[i] = '\0';
     return new;
 }
 
@@ -308,7 +302,7 @@ int isRedirection(char *line)
     int res = 0;
     for(int i = 0; line[i] != '\0'; i++)
     {
-        if(line[i] == '>')
+        if(line[i] == '>' || line[i] == '<')
         {
             res = 1;
         }
@@ -319,16 +313,18 @@ int isRedirection(char *line)
 char **get_file_name(char **args)
 {
     int a = 0;
-    char **file;
-    for(int i = 0; args[i] != '\0'; i++)
+    char **res;
+    char **file = args;
+    for(int i = 0; file[i] != '\0'; i++)
     {
-        if(*args[i] == '\0')
+        if(*file[i] == '>' || *file[i] == '<')
         {
-            a = i - 1;
+            res[0] = file[i + 1];
         }
+        
     }
-    file[0] = args[a];
-    return file;
+    printf("%s file\n", res[0]);
+    return res;
 }
 
 void *redirection(char **args, char **file)
@@ -520,12 +516,18 @@ int main(int argc, char *argv[])
             else if(isRedirection(command))
             {
                 args = parse_command(command);
-              
-                params = args;
-                // char **file = get_file_name(params);
+                printf("%s\n", args[0]);
+                // params = args;
+
+                char **file = get_file_name(args);
+                                printf("%s\n", args[0]);
+                                                printf("%s file\n", *file);
+
                 args = remove_special(args);//remove ">"
+                                printf("%s\n", args[0]);
+
                 args = remove_last_index(args);//remove the file name
-                redirection(args, get_file_name(params));
+                redirection(args, file);
             }
             else
             {
