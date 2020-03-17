@@ -235,7 +235,89 @@ char *remove_last2(char *cmd)
     return cmd;
 }
 
-void *run_background(char *cmd, char **args)
+char **put_left_array(char **args)
+{
+    for(int i = 0; args[i] != '\0'; i++)
+    {
+        if(*args[i] == '|')
+        {
+            args[i] = '\0';
+        }
+    }
+    printf("%s left\n", args[0]);
+    printf("%s left\n", args[1]);
+    return args;
+}
+
+char **put_right_array(char **args)
+{
+    char **res = calloc(20, 1);
+    int j = 0, k = 0, i = 0;
+    for(i = 0; args[i] != '\0'; i++)
+    {
+        if(*args[i] == '|')
+        {
+            k = i;
+            printf("%d k\n", k);
+            break;
+            
+        }
+    }
+    k += 1;
+    printf("%d k\n", k);
+    for(j = 0; args[k] != '\0'; k++, j++)
+    {
+            printf("%d before copy\n", k);
+    printf("%s args\n", args[k]);
+
+        res[j] = args[k];
+    }
+    printf("%s right\n", res[0]);
+    printf("%s right\n", res[1]);
+    res[j] = '\0';
+
+    return res;
+}
+
+void *piping(char **left, char **right)
+{
+    pid_t pid, pid1;
+    int fd[2];
+    pipe(fd);
+    if((pid = fork()) == -1)
+    {
+        print_error();
+    }
+    else if(pid == 0)
+    {
+        if((pid1 = fork()) == 0)
+        {
+            close(fd[0]);
+            dup2(fd[1], 1);
+            close(fd[1]);
+            if(execvp(*left, left) < 0)
+            {
+                print_error();
+            }
+        }
+        else
+        {
+            close(fd[1]);
+            dup2(fd[0], 0);
+            close(fd[0]);
+            if(execvp(*right, right) < 0)
+            {
+                print_error();
+            }
+        } 
+    }
+    else
+    {
+    }
+
+}
+
+void *run_background(char **args)
 {
     pid_t pid;
     printf("pid before fork is: %d\n", getpid());
@@ -257,9 +339,7 @@ void *run_background(char *cmd, char **args)
     }
     else
     {
-  
     }
-
 }
 
 char **remove_special(char **args)
@@ -484,7 +564,7 @@ int main(int argc, char *argv[])
             {   
                 command = remove_ampersand(command);
                 args = parse_command(command);
-                run_background(command, args);
+                run_background(args);
                 
             }
             else if(isRedirection(command))
@@ -494,9 +574,31 @@ int main(int argc, char *argv[])
                 char *file = calloc(20, 1);
                 strcpy(file, get_file_name(args));
 
-                args = remove_special(args);//remove ">"
+                args = remove_special(args);//remove ">" or "<"
                 redirection(args, file);
 
+            }
+            else if(isPipe(command))
+            {
+                char *command1 = calloc(100, 1);
+                strcpy(command1, command);
+                printf("%s command\n", command);
+                printf("%s command1\n", command1);
+
+                args = parse_command(command);
+                    printf("%ld args size\n", sizeof(args));
+
+                char **args1 = parse_command(command1);
+                                    printf("%ld args1 size\n", sizeof(args1));
+
+                char **left = put_left_array(args);
+                                    printf("%ld args size\n", sizeof(args));
+
+                char **right = put_right_array(args1);
+                                                    printf("%ld args1 size\n", sizeof(args1));
+
+
+                piping(left, right);
             }
             else
             {
