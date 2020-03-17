@@ -1,3 +1,5 @@
+//Duy Nguyen - Lab 2 - CIS 3207 - Spring 2019
+//I used some help from brennan.io for reading command and parsing command
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -115,7 +117,7 @@ int help()
     clr();    
     char *str[] = {
         "Welcome to my shell program, press Enter to navigate through help menu.",
-        "Copyrights@ Duy Nguyen.",
+        "Copyrights @ Duy Nguyen.",
         "Description:\n\tThis acts as a regular UNIX shell.",
         "Built-in commands you can try:",
         "\t1. cd - Change directory to your input.",
@@ -210,18 +212,6 @@ char *remove_ampersand(char *cmd)
     return cmd;
 }
 
-char *remove_last(char *cmd)
-{
-    //remove last char of a line
-    int i = strlen(cmd);
-    if(cmd[i - 1] == ' ' || cmd[i - 1] == '\0' || cmd[i - 1] == '\n')
-    {
-        cmd[i - 1] = '\0';
-    }
-    
-    return cmd;
-}
-
 char *remove_last2(char *cmd)
 {
     //remove last 2 chars of a line
@@ -258,19 +248,13 @@ char **put_right_array(char **args)
         if(*args[i] == '|')
         {
             k = i;
-            printf("%d k\n", k);
             break;
-            
         }
     }
     k += 1;
-    printf("%d k\n", k);
     for(j = 0; args[k] != '\0'; k++, j++)
     {
-            printf("%d before copy\n", k);
-    printf("%s args\n", args[k]);
-
-        res[j] = args[k];
+       res[j] = args[k];
     }
     printf("%s right\n", res[0]);
     printf("%s right\n", res[1]);
@@ -294,25 +278,28 @@ void *piping(char **left, char **right)
         {
             close(fd[0]);
             dup2(fd[1], 1);
-            close(fd[1]);
+            
             if(execvp(*left, left) < 0)
             {
                 print_error();
             }
+            close(fd[1]);
         }
         else
         {
             close(fd[1]);
             dup2(fd[0], 0);
-            close(fd[0]);
             if(execvp(*right, right) < 0)
             {
                 print_error();
             }
+                        close(fd[0]);
+
         } 
     }
     else
     {
+
     }
 
 }
@@ -360,9 +347,13 @@ int isRedirection(char *line)
     int res = 0;
     for(int i = 0; line[i] != '\0'; i++)
     {
-        if(line[i] == '>' || line[i] == '<')
+        if(line[i] == '>')
         {
             res = 1;
+        }
+        else if(line[i] == '<')
+        {
+            res = 2;
         }
     }
     return res;
@@ -381,7 +372,7 @@ char *get_file_name(char **args)
     return file;
 }
 
-void *redirection(char **args, char *file)
+void *redirection_out(char **args, char *file)
 {
     int pid = fork();
 
@@ -389,9 +380,41 @@ void *redirection(char **args, char *file)
     {
         if(pid == 0)
         {
-            int outFile = open(file, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXU|S_IRWXG|S_IRWXO);
+            int outFile = open(file, O_WRONLY|O_CREAT|O_APPEND, S_IRWXU|S_IRWXG|S_IRWXO);
             close(1);
-            dup2(outFile, 1);
+            dup2(outFile, STDOUT_FILENO);
+            close(outFile);
+
+            if(execvp(args[0], args) < 0)
+            {
+                puts("ERROR EXECUTING COMMAND!");
+                exit(0);
+            }
+        }
+        else
+        {
+            int status = 0;
+            wait(&status);
+        }
+    }
+    else
+    {
+        puts("Forking error!");
+    }
+   
+}
+
+void *redirection_in(char **args, char *file)
+{
+    int pid = fork();
+
+    if(pid >= 0)
+    {
+        if(pid == 0)
+        {
+            int outFile = open(file, O_RDONLY, S_IRWXU|S_IRWXG|S_IRWXO);
+            close(0);
+            dup2(outFile, 0);
             close(outFile);
 
             if(execvp(args[0], args) < 0)
@@ -450,43 +473,42 @@ void *execute_args(char *cmd, char **args)
     
     if(strcmp(cmd, "exit") == 0)
     {
-        printf("%s invoked.\n", cmd);
-
+        // printf("%s invoked.\n", cmd);
         quit();
     }
     else if(strcmp(cmd, "pause") == 0)
     {
-        printf("%s invoked.\n", cmd);
+        // printf("%s invoked.\n", cmd);
         pause_shell();
     }
     else if(strcmp(cmd, "cd") == 0)
     {
-        printf("%s invoked.\n", cmd);
+        // printf("%s invoked.\n", cmd);
         cd(args);
     }
     else if(strcmp(cmd, "help") == 0)
     {
-        printf("%s invoked.\n", cmd);
+        // printf("%s invoked.\n", cmd);
         help();
     }
     else if(strcmp(cmd, "clr") == 0)
     {
-        printf("%s invoked.\n", cmd);
+        // printf("%s invoked.\n", cmd);
         clr();
     }
     else if(strcmp(cmd, "echo") == 0)
     {
-        printf("%s invoked.\n", cmd);
+        // printf("%s invoked.\n", cmd);
         echo(args);
     }
     else if(strcmp(cmd, "dir") == 0)
     {
-        printf("%s invoked.\n", cmd);
+        // printf("%s invoked.\n", cmd);
         dir();
     }
     else if(strcmp(cmd, "environ") == 0)
     {
-        printf("%s invoked.\n", cmd);
+        // printf("%s invoked.\n", cmd);
         environ();
     }
     else if(strcmp(cmd, "\n") == 0)
@@ -495,7 +517,7 @@ void *execute_args(char *cmd, char **args)
     }
     else
     {
-        printf("pid before fork is: %d\n", getpid());
+        // printf("pid before fork is: %d\n", getpid());
         pid = fork();
         if(pid == -1)
         {
@@ -503,7 +525,7 @@ void *execute_args(char *cmd, char **args)
         }
         else if(pid == 0)
         {
-            printf("pid after fork is: %d\n", getpid());
+            // printf("pid after fork is: %d\n", getpid());
             //check to see which command to execute by comparing the strings, otherwise print the error
             
             if(execvp(*args, args) < 0)
@@ -551,6 +573,7 @@ void *read_from_batch(char *argv[])
 int main(int argc, char *argv[])
 {
     char *command, **args; //initialize the pointers to use
+    int a;
     clr(); //clear the screen for the first time
     if(argc == 1){
         puts("Enter 'help' for user manual.");
@@ -567,7 +590,7 @@ int main(int argc, char *argv[])
                 run_background(args);
                 
             }
-            else if(isRedirection(command))
+            else if((a = isRedirection(command)) != 0)
             {
                 args = parse_command(command);
 
@@ -575,7 +598,14 @@ int main(int argc, char *argv[])
                 strcpy(file, get_file_name(args));
 
                 args = remove_special(args);//remove ">" or "<"
-                redirection(args, file);
+                if(a == 1)
+                {
+                    redirection_out(args, file);
+                }
+                else if(a == 2)
+                {
+                    redirection_in(args, file);
+                }
 
             }
             else if(isPipe(command))
@@ -586,16 +616,16 @@ int main(int argc, char *argv[])
                 printf("%s command1\n", command1);
 
                 args = parse_command(command);
-                    printf("%ld args size\n", sizeof(args));
+                printf("%ld args size\n", sizeof(args));
 
                 char **args1 = parse_command(command1);
-                                    printf("%ld args1 size\n", sizeof(args1));
+                printf("%ld args1 size\n", sizeof(args1));
 
                 char **left = put_left_array(args);
-                                    printf("%ld args size\n", sizeof(args));
+                printf("%ld args size\n", sizeof(args));
 
                 char **right = put_right_array(args1);
-                                                    printf("%ld args1 size\n", sizeof(args1));
+                printf("%ld args1 size\n", sizeof(args1));
 
 
                 piping(left, right);
