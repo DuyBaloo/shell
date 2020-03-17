@@ -234,8 +234,8 @@ char **put_left_array(char **args)
             args[i] = '\0';
         }
     }
-    printf("%s left\n", args[0]);
-    printf("%s left\n", args[1]);
+    // printf("%s left\n", args[0]);
+    // printf("%s left\n", args[1]);
     return args;
 }
 
@@ -256,8 +256,8 @@ char **put_right_array(char **args)
     {
        res[j] = args[k];
     }
-    printf("%s right\n", res[0]);
-    printf("%s right\n", res[1]);
+    // printf("%s right\n", res[0]);
+    // printf("%s right\n", res[1]);
     res[j] = '\0';
 
     return res;
@@ -267,56 +267,46 @@ void *piping(char **left, char **right)
 {
     pid_t pid, pid1;
     int fd[2];
-    pipe(fd);
+    if(pipe(fd) == -1)
+    {
+        print_error();
+    }
     if((pid = fork()) == -1)
     {
         print_error();
     }
     else if(pid == 0)
     {
-        if((pid1 = fork()) == 0)
-        {
-            close(fd[0]);
-            dup2(fd[1], 1);
-            
-            if(execvp(*left, left) < 0)
-            {
-                print_error();
-            }
-            close(fd[1]);
-        }
-        else
-        {
-            close(fd[1]);
-            dup2(fd[0], 0);
-            if(execvp(*right, right) < 0)
-            {
-                print_error();
-            }
-                        close(fd[0]);
+        close(fd[0]);
+        dup2(fd[1], STDOUT_FILENO);
 
-        } 
+        if(execvp(*left, left) < 0)
+        {
+            print_error();
+        }
+            
     }
     else
     {
+        close(fd[1]);
+        dup2(fd[0], STDIN_FILENO);
 
-    }
-
+        if(execvp(*right, right) < 0)
+        {
+            print_error();
+        }
+    } 
 }
 
 void *run_background(char **args)
 {
     pid_t pid;
-    printf("pid before fork is: %d\n", getpid());
-
     if((pid = fork()) == -1)
     {
         print_error();
     }
     else if(pid == 0)
     {
-        printf("pid after fork is: %d\n", getpid());
-
         //check to see which command to execute by comparing the strings, otherwise print the error
         if(execvp(*args, args) < 0)
         {
@@ -612,21 +602,20 @@ int main(int argc, char *argv[])
             {
                 char *command1 = calloc(100, 1);
                 strcpy(command1, command);
-                printf("%s command\n", command);
-                printf("%s command1\n", command1);
+                // printf("%s command\n", command);
+                // printf("%s command1\n", command1);
 
                 args = parse_command(command);
-                printf("%ld args size\n", sizeof(args));
+                // printf("%ld args size\n", sizeof(args));
 
                 char **args1 = parse_command(command1);
-                printf("%ld args1 size\n", sizeof(args1));
+                // printf("%ld args1 size\n", sizeof(args1));
 
                 char **left = put_left_array(args);
-                printf("%ld args size\n", sizeof(args));
+                // printf("%ld args size\n", sizeof(args));
 
                 char **right = put_right_array(args1);
-                printf("%ld args1 size\n", sizeof(args1));
-
+                // printf("%ld args1 size\n", sizeof(args1));
 
                 piping(left, right);
             }
